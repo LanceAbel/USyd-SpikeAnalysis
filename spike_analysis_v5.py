@@ -8,26 +8,40 @@ import scipy.io.wavfile as wav
 import csv
 from scipy.stats import sem
 
-plt.gcf().subplots_adjust(bottom=-19.22)
+'''Made by Lance Abel May 2023 for University of Sydney Cockroach leg experiment
+NEUR3906: Neural Information Processing (Advanced) - thanks to Dr Dario Protti for some feedback
+'''
+
+
+plt.gcf().subplots_adjust(bottom=-9.22)
 
 
 
-# alternate option without .gcf
-# plt.subplots_adjust(bottom=0.15)
 
-# Plot a time-range of the signal and highlight the spikes
-
-
+#exp = "E1" # Mechanical stim, room temp
+# Light
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E1//E1_Light_small_stimulation.wav'
+# Medium
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E1//E1_Medium_small_stimulation.wav'
+# Strong
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E1//E1_Strong_small_stimulation.wav'
 
+
+exp = "E2" # Spraying stim, room temp
+# Close distance
 exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E2//E2_Air_1L.wav'
+# Medium distance
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E2//E2_Air_2L.wav'
+# Far distance
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E2//E2_Air_3L.wav'
 
+
+#exp = "E3" # Mechanical stim, low temp
+# Light
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E3//E3_LowT_Light_small.wav'
+# Medium
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E3//E3_LowT_Medium_small.wav'
+# Strong
 #exp_file = r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E3//E3_LowT_Strong_small.wav'
 
 
@@ -38,17 +52,17 @@ class SpikeAnalysis():
         self.file_path = file_path
 
         # Spike detection
-        self.spike_threshold_sd = 3.5 # if exp_file == r'//Users//user//odrive//OneDrive//Docs Sync//Jobs And Money//Careers//Study//Uni//USyd//2023S1//NEUR3906 Neural Information Processing//Assessments//Prac Reports//Prac 1 - Cockroach Spike Recordings//E1//E1_Strong_small_stimulation.wav' else 4 # standard deviation threshold for spike detection
-        self.window_size = 100.0
-
-        self.total_time = 500
-        self.num_bins = 20 # int(self.total_time / self.bin_width) # Total self.bin_width * self.num_bins  analysed (in ms)
-        self.bin_width = self.total_time / self.num_bins
-        
+        self.spike_threshold_sd = 3.5 
 
         # Bandpass
         self.low_freq = 1
         self.high_freq = 15000
+        # For plotting average number of spikes following each spike
+        self.total_time = 500
+        self.num_bins = 20 # int(self.total_time / self.bin_width) # Total self.bin_width * self.num_bins  analysed (in ms)
+        self.bin_width = self.total_time / self.num_bins
+
+        self.window_size = 250 # Not used in assignment
 
         self.load_data()
         self.remove_dc()
@@ -87,21 +101,21 @@ class SpikeAnalysis():
         self.filename_intervals   = ""
         self.intervals_namestring = ""
         if self.intervals_use:
-            # E2
-            self.intervals_to_use = [[5.3,6.5],[10.3,11.5], [15.3,16.5], [20.0,21.2], [25.2,26.4]]  # Intervals in seconds where the stimulation was active
-            # E1 - High temp
-            #self.intervals_to_use = [[10.4,19.5], [31,39.5], [50.5,59.5], [70.3,79.5], [90.3,99.5], [111,129]] # Intervals in seconds where the stimulation was active
-            # E3 - Low temp
-            #self.intervals_to_use = [[10.4,19.5], [30.5,39.5], [50.0,59.5], [70.3,79.5], [90.3,99.5], [110.5,129]] 
+            if exp == "E1": # Mechanical stim, room temp
+                self.intervals_to_use = [[10.4,19.5], [31,39.5], [50.5,59.5], [70.3,79.5], [90.3,99.5], [111,129]] # Intervals in seconds where the stimulation was active
+            elif exp == "E2": # Pressure spray, room temp
+                self.intervals_to_use = [[5.3,6.5],[10.3,11.5], [15.3,16.5], [20.0,21.2], [25.2,26.4]]  # Intervals in seconds where the stimulation was active
+            elif exp == "E3": # Mechanical stim, low temp
+                self.intervals_to_use = [[10.4,19.5], [30.5,39.5], [50.0,59.5], [70.3,79.5], [90.3,99.5], [110.5,129]] 
             self.intervals_namestring = "_stim_only" if self.use_stimulation else "_non_stim_only"
             if not self.use_stimulation:
                 # Automatic selection of non-stimulus times from the stimulus times (any other time other than stimulated)
                 #self.select_nonstimulation_times()
                 # Manual override of non-stimulus times
-                #E2
-                self.intervals_to_use = [[0,5],[8,10], [12,15], [18,20], [22,25]]  # Intervals in seconds where the stimulation was active
-                # E1, E3
-                #self.intervals_to_use = [[0,10], [22,30], [42,50], [62,70], [82,90], [102,110]] 
+                if exp == "E2":
+                    self.intervals_to_use = [[0,5],[8,10], [12,15], [18,20], [22,25]]  # Intervals in seconds where the stimulation was active
+                elif exp in ["E1","E3"]:
+                    self.intervals_to_use = [[0,10], [22,30], [42,50], [62,70], [82,90], [102,110]] 
             else:
                 print("Intervals to use",self.intervals_to_use )
             # for time_range in self.intervals_to_use:
@@ -110,15 +124,13 @@ class SpikeAnalysis():
         self.pairs = self.intervals_to_use if self.intervals_use else [(x,x+1) for x in range(0,int(max(self.times)))]
         print("Time range of data %s to %s secs"%(str(min(self.times)),str(max(self.times))))
         
-
-
         self.save_spikerate()
         
         #self.plot_STA()
 
         self.plot_PTSH_auto()
         #self.plot_PSTH_v1()
-        ##self.plot_PSTH_v2()
+        #self.plot_PSTH_v2()
 
         self.spikerate_stats()
         self.subsequent_firing_rate()
@@ -141,7 +153,7 @@ class SpikeAnalysis():
         self.signal_dc_filt = np.array(self.signal_float, copy=True)
         self.signal_dc_filt -= self.baseline
 
-        self.window_size = 21 # 21 
+        self.window_size = 21 # If you want to take median only over recent data to form baseline
         self.filtered_signal = sig.medfilt(self.signal_dc_filt, self.window_size)
         self.signal_to_use = self.signal_dc_filt # self.filtered_signal # self.signal_dc_filt # self.signal_float #  #  # self.signal_float
 
@@ -269,7 +281,6 @@ class SpikeAnalysis():
  
 
     def detect_spikes_v2(self):
-        # Find the rolling median of the signal
 
         # # Find the indices of the spike times where the filtered signal crosses the threshold
         #print("Signal to use", self.signal_to_use)
@@ -289,7 +300,7 @@ class SpikeAnalysis():
         plt.figure(figsize=(10,5))
         plt.title("Signal over time showing spikes")
         plt.plot(self.times[start_idx:end_idx], self.signal_to_use[start_idx:end_idx], 'k-', lw=0.5)
-
+        plt.show()
 
  
     def find_peak_times(self):
@@ -367,9 +378,7 @@ class SpikeAnalysis():
 
         # compute the range of possible bin sizes
         bin_sizes = np.linspace(dt.min(), dt.max(), max_bins)
-
         #print("Bin Sizes", bin_sizes)
-
         # compute the normalized mean square successive difference for each bin size
         nmsd = []
         for bs in bin_sizes:
@@ -380,21 +389,37 @@ class SpikeAnalysis():
                 nmsd.append((bs / np.mean(counts))**2 * v)
 
         # find the bin size with the minimum normalized mean square successive difference
-        opt_bin_size = bin_sizes[np.argmin(nmsd)]
+        opt_bin_size = 0.5 if exp in ["E1","E3"] else 0.1 # bin_sizes[np.argmin(nmsd)] # Can override if we wish e.g. to 0.5 for 500msec
+        print("Optimal bin size",  opt_bin_size)
+
 
         # plot the spike times histogram with the optimal bin size
         plt.figure()
-        plt.hist(self.spike_times_to_use, bins=np.arange(0, self.spike_times_to_use[-1]+opt_bin_size, opt_bin_size))
-        plt.title("Peri-stimulus time histogram")
+
+        ##Plot the PSTH
+        #Method 1
+        #plt.hist(self.spike_times_to_use, bins=np.arange(0, self.spike_times_to_use[-1]+opt_bin_size, opt_bin_size))
+        #plt.title("Peri-stimulus time histogram")
+
+        # Method 2
+        psth, bins = np.histogram(self.spike_times_to_use, bins=np.arange(0, self.spike_times_to_use[-1]+opt_bin_size, opt_bin_size))
+        #psth = psth / (opt_bin_size / 1000) / len(self.spike_times_to_use)
+        fig, ax = plt.subplots()
+        ax.bar(bins[:-1], psth, width=opt_bin_size, align='edge')
+        ax.set_xlabel('Time (sec)')
+        ax.set_ylabel('Number of spikes/second')
+        ax.set_title('Peri-stimulus Time Histogram')
+
+
         if self.intervals_use:
             m = 0
             for j in range(0,len(self.intervals_to_use)):
                 i_0, i_1 = self.intervals_to_use[m][0], self.intervals_to_use[m][1]
                 plt.axvspan(i_0, i_1, alpha=0.5, color='gray')
                 m+=1
-        plt.xlabel('Time(s) auto-binned')
-        plt.ylabel('Number of spikes/second')
-        #plt.show()
+        #plt.xlabel('Time (sec)')
+        #plt.ylabel('Number of spikes/bin')
+        plt.show()
 
 
 
@@ -404,7 +429,7 @@ class SpikeAnalysis():
         # Plot PSTH
         # Define the window size and bin size for the PSTH
         window_size = min(140,max(self.spike_times)) # in sec
-        bin_size = 2 # in sec
+        bin_size = 0.1 # 0.5 if exp in ["E1","E3"] else 0.1
         self.dt = 1 / self.samplerate # bin width in seconds
 
         # Convert window_size and bin_size to units of samples
@@ -418,10 +443,11 @@ class SpikeAnalysis():
         psth = psth / (bin_size / 1000) / len(self.spike_times)
 
         # Plot the PSTH
+        plt.figure()
         fig, ax = plt.subplots()
         ax.bar(bins[:-1], psth, width=bin_size, align='edge')
         ax.set_xlabel('Time (sec)')
-        ax.set_ylabel('Spikes per second')
+        ax.set_ylabel('Number of spikes/second')
         ax.set_title('Peri-Stimulus Time Histogram')
 
         if self.intervals_use:
@@ -430,7 +456,7 @@ class SpikeAnalysis():
                 i_0, i_1 = self.intervals_to_use[m][0], self.intervals_to_use[m][1]
                 plt.axvspan(i_0, i_1, alpha=0.5, color='gray')
                 m+=1
-        #plt.show()
+        plt.show()
 
 
     def plot_PSTH_v2(self):
@@ -473,7 +499,7 @@ class SpikeAnalysis():
                 i_0, i_1 = self.intervals_to_use[m][0], self.intervals_to_use[m][1]
                 plt.axvspan(i_0, i_1, alpha=0.5, color='gray')
                 m+=1
-        #plt.show()
+        plt.show()
 
 
     def save_spikerate(self):
@@ -565,7 +591,7 @@ class SpikeAnalysis():
                     bin_begin_time = start_spike+(bin_num)*self.bin_width*0.001
                     bin_end_time   = start_spike+(bin_num+1)*self.bin_width*0.001
 
-                    #if bin_begin_time > 20.5 and bin_end_time < 30.5:
+                    #if bin_begin_time > 20.5 and bin_end_time < 30.5:  # Used to analyse individual block
                     count_spikes   = len([t for t in t_later_spikes if (t<=bin_end_time and t>bin_begin_time) ])
                     #print("Bin num %s end spike time %s count spikes %s"%(str(bin_num),str(bin_end_time),str(count_spikes)))
                     if bin_num in self.spikes_follow_rawcount.keys():
@@ -589,15 +615,15 @@ class SpikeAnalysis():
         psth_file = exp_file.replace(".wav","_psth_"+str("0-"+str(int(self.bin_width*self.num_bins)))+"_"+str(self.spike_threshold_sd)+"_sd"+self.filename_intervals+self.intervals_namestring+".csv") #_1st Group
         jpg_file = exp_file.replace(".wav","_psth_"+str("0-"+str(int(self.bin_width*self.num_bins)))+"_"+str(self.spike_threshold_sd)+"_sd"+self.filename_intervals+self.intervals_namestring+".jpg") #_1st Group
         #if not self.intervals_use:
-        with open(dct_file, 'w') as csv_file:  
-            writer = csv.writer(csv_file)
-            for key, value in self.spikerates.items():
-                writer.writerow([key, value])
+        # with open(dct_file, 'w') as csv_file:  
+        #     writer = csv.writer(csv_file)
+        #     for key, value in self.spikerates.items():
+        #         writer.writerow([key, value])
 
-        with open(psth_file, 'w') as csv_file:  
-            writer = csv.writer(csv_file)
-            for key, value in self.spikes_follow_per_second.items():
-                writer.writerow([key, value])
+        # with open(psth_file, 'w') as csv_file:  
+        #     writer = csv.writer(csv_file)
+        #     for key, value in self.spikes_follow_per_second.items():
+        #         writer.writerow([key, value])
 
  
         plt.figure()        
@@ -608,7 +634,7 @@ class SpikeAnalysis():
         plt.xticks(rotation=45, fontsize=7)
         #plt.xticks(len(self.spikes_follow_per_second.keys()) + 0.5, self.spikes_follow_per_second.keys(), rotation=90, fontsize=9)
         plt.ylabel('Spikes per second')
-        plt.savefig(jpg_file)
+        #plt.savefig(jpg_file)
         #plt.show()
 
 
